@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
+edict_t	*pm_passent;
 
 char *ClientTeam (edict_t *ent)
 {
@@ -899,6 +900,168 @@ void Cmd_PlayerList_f(edict_t *ent)
 	gi.cprintf(ent, PRINT_HIGH, "%s", text);
 }
 
+//edict_t	*pm_passent;
+
+/*trace_t	PM_trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
+{
+	if (pm_passent->health > 0)
+		return gi.trace(start, mins, maxs, end, pm_passent, MASK_PLAYERSOLID);
+	else
+		return gi.trace(start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
+}*/
+
+void Cmd_Dash_f(edict_t *ent){
+	
+	gclient_t	*client;
+	edict_t	*other;
+	int		i, j;
+	pmove_t	pm;
+	vec3_t start;
+	vec3_t mins;
+	vec3_t maxs;
+	vec3_t end;
+	trace_t endgame;
+
+	//level.current_entity = ent;
+	//pm_passent = ent;
+	client = ent->client;
+
+	//memset(&pm, 0, sizeof(pm));
+	//client->ps.pmove.gravity = sv_gravity->value;
+	
+	//if (memcmp(&client->old_pmove, &pm.s, sizeof(pm.s)))
+	//{
+		//pm.snapinitial = true;
+		//		gi.dprintf ("pmove changed!\n");
+	//}
+
+	for (i = 0; i < 3; i++)
+	{
+		client->ps.pmove.velocity[i] = (ent->velocity[i] *= 5);
+	}
+
+	//pm.pointcontents = gi.pointcontents;
+
+	//gi.Pmove(&pm);
+	/*
+	if (level.intermissiontime)
+	{
+	client->ps.pmove.pm_type = PM_FREEZE;
+	// can exit intermission after five seconds
+	if (level.time > level.intermissiontime + 5.0
+	)
+	level.exitintermission = true;
+	return;
+	}
+
+	pm_passent = ent;
+
+
+
+	// set up for pmove
+	memset(&pm, 0, sizeof(pm));
+
+	if (ent->movetype == MOVETYPE_NOCLIP)
+	client->ps.pmove.pm_type = PM_SPECTATOR;
+	else if (ent->s.modelindex != 255)
+	client->ps.pmove.pm_type = PM_GIB;
+	else if (ent->deadflag)
+	client->ps.pmove.pm_type = PM_DEAD;
+	else
+	client->ps.pmove.pm_type = PM_NORMAL;
+
+	client->ps.pmove.gravity = sv_gravity->value;
+	pm.s = client->ps.pmove;
+
+	for (i = 0; i<3; i++)
+	{
+	pm.s.origin[i] = ent->s.origin[i] * 0.2;
+	pm.s.velocity[i] = ent->velocity[i] * 0.2;
+	}
+
+	if (memcmp(&client->old_pmove, &pm.s, sizeof(pm.s)))
+	{
+	pm.snapinitial = true;
+	//		gi.dprintf ("pmove changed!\n");
+	}
+
+	if (pm_passent->health > 0)
+	pm.trace(start, mins, maxs, end, pm_passent, MASK_PLAYERSOLID);
+	else
+	pm.trace(start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
+
+	//pm.trace = PM_trace;	// adds default parms
+	pm.pointcontents = gi.pointcontents;
+
+	// perform a pmove
+	gi.Pmove(&pm);
+
+
+	// save results of pmove
+	client->ps.pmove = pm.s;
+	client->old_pmove = pm.s;
+
+	for (i = 0; i<3; i++)
+	{
+	ent->s.origin[i] = pm.s.origin[i] * 0.125;
+	ent->velocity[i] = pm.s.velocity[i] * 0.125;
+	}
+
+	VectorCopy(pm.mins, ent->mins);
+	VectorCopy(pm.maxs, ent->maxs);
+
+
+	}
+
+	float Currtime;
+	float i;
+	char *msg;
+
+	ent = ent->client;
+
+	msg = "Dashing\n";
+	gi.cprintf(ent, PRINT_HIGH, msg);
+
+	Currtime = 0.0;
+	if (Currtime < 10000.0){
+	ent->speed += 2000.0;
+	i += 2000.0;
+	Currtime += FRAMETIME;
+	}
+	else if (Currtime > 10000.0){
+	ent->speed -= i;
+
+	Currtime += FRAMETIME;
+	if (Currtime > 150000.0){
+	Currtime = 0.0;
+	}
+	}
+	*/
+}
+
+
+void Cmd_id_f(edict_t *ent)
+{
+	int j;
+	char stats[500];
+	vec3_t  start, forward, end;
+	trace_t tr;
+	j = sprintf(stats, "     NAME              RANGE\n\n");
+
+	VectorCopy(ent->s.origin, start);
+	start[2] += ent->viewheight;
+	AngleVectors(ent->client->v_angle, forward, NULL, NULL);
+	VectorMA(start, 8192, forward, end);
+	tr = gi.trace(start, NULL, NULL, end, ent,
+		MASK_SHOT | CONTENTS_SLIME | CONTENTS_LAVA);
+	if (tr.ent->client)
+	{
+		j += sprintf(stats + j, "%16s          %i\n",
+			tr.ent->client->pers.netname, (int)(tr.fraction * 512));
+		gi.centerprintf(ent, "%s", stats);
+	}
+
+}
 
 /*
 =================
@@ -985,6 +1148,10 @@ void ClientCommand (edict_t *ent)
 		Cmd_PutAway_f (ent);
 	else if (Q_stricmp (cmd, "wave") == 0)
 		Cmd_Wave_f (ent);
+	else if (Q_stricmp(cmd, "dash") == 0)
+		Cmd_Dash_f(ent);
+	else if (Q_stricmp(cmd, "id") == 0)
+		Cmd_id_f(ent);
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
 	else	// anything that doesn't match a command will be a chat

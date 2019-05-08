@@ -1632,6 +1632,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		// perform a pmove
 		gi.Pmove (&pm);
 
+
 		// save results of pmove
 		client->ps.pmove = pm.s;
 		client->old_pmove = pm.s;
