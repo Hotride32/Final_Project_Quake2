@@ -828,8 +828,14 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
-
-	fire_blaster (ent, start, forward, damage, 1000, effect, hyper);
+	if (ent->client->chargetime > 100){
+		fire_blaster_held(ent, start, forward, damage * 8, 1000, effect, hyper);
+		ent->client->chargetime = 0;
+	}
+	else{
+		fire_blaster(ent, start, forward, damage, 1000, effect, hyper);
+		ent->client->chargetime = 0;
+	}
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1352,7 +1358,7 @@ void Weapon_Railgun (edict_t *ent)
 	static int	pause_frames[]	= {56, 0};
 	static int	fire_frames[]	= {4, 0};
 
-	Weapon_Generic (ent, 3, 18, 56, 61, pause_frames, fire_frames, weapon_railgun_fire);
+	Weapon_Generic (ent, 3, 4, 56, 61, pause_frames, fire_frames, weapon_railgun_fire);
 }
 
 

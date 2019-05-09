@@ -938,6 +938,8 @@ struct gclient_s
 	qboolean	anim_duck;
 	qboolean	anim_run;
 
+	int			chargetime;
+
 	// powerup timers
 	float		quad_framenum;
 	float		invincible_framenum;
@@ -1035,6 +1037,7 @@ struct edict_s
 	edict_t		*movetarget;
 	float		yaw_speed;
 	float		ideal_yaw;
+	
 
 	float		nextthink;
 	void		(*prethink) (edict_t *ent);
@@ -1055,6 +1058,7 @@ struct edict_s
 	int			max_health;
 	int			gib_health;
 	int			deadflag;
+	int			chargetime;
 	qboolean	show_hostile;
 
 	float		powerarmor_time;

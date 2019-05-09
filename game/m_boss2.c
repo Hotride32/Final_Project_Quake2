@@ -496,8 +496,12 @@ void boss2_pain (edict_t *self, edict_t *other, float kick, int damage)
 
 void boss2_dead (edict_t *self)
 {
+
 	VectorSet (self->mins, -56, -56, 0);
 	VectorSet (self->maxs, 56, 56, 80);
+	Drop_Item(self, FindItem("Chaingun"));
+	//Drop_General(self, FindItem("Chaingun"));
+
 	self->movetype = MOVETYPE_TOSS;
 	self->svflags |= SVF_DEADMONSTER;
 	self->nextthink = 0;
@@ -506,8 +510,21 @@ void boss2_dead (edict_t *self)
 
 void boss2_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
+	gitem_t *item;
+
 	gi.sound (self, CHAN_VOICE, sound_death, 1, ATTN_NONE, 0);
 	self->deadflag = DEAD_DEAD;
+	Drop_Item(self, FindItem("Chaingun"));
+	Drop_Item(self, FindItem("Shotgun"));
+	Drop_Item(self, FindItem("Machinegun"));
+	Drop_Item(self, FindItem("Super Shotgun"));
+	Drop_Item(self, FindItem("Grenade Launcher"));
+	Drop_Item(self, FindItem("Rocket Launcher"));
+	Drop_Item(self, FindItem("Railgun"));
+	Drop_Item(self, FindItem("BFG10K"));
+	//item->drop = "weapon_chaingun";
+	//Drop_General(self, FindItem("Chaingun"));
+	//G_Spawn();
 	self->takedamage = DAMAGE_NO;
 	self->count = 0;
 	self->monsterinfo.currentmove = &boss2_move_death;

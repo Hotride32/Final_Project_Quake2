@@ -1039,6 +1039,35 @@ void Cmd_Dash_f(edict_t *ent){
 	*/
 }
 
+void Cmd_Wall_f(edict_t *ent){
+	int i;
+	int j;
+	gclient_t	*client;
+	pmove_t	pm;
+	edict_t	*other;
+
+	client = ent->client;
+
+	
+
+	for (i = 0; i<pm.numtouch; i++)
+	{
+		other = pm.touchents[i];
+		for (j = 0; j<i; j++)
+		if (pm.touchents[j] == ent)
+			break;
+		if (j != i)
+			continue;	// duplicated
+		if (!ent->touch)
+			continue;
+		if (ent->touch)
+			client->ps.pmove.velocity[2] = (ent->velocity[2] += 5) *10;
+			
+		ent->touch(ent, other, NULL, NULL);
+		
+	}
+}
+
 
 void Cmd_id_f(edict_t *ent)
 {
@@ -1148,11 +1177,13 @@ void ClientCommand (edict_t *ent)
 		Cmd_PutAway_f (ent);
 	else if (Q_stricmp (cmd, "wave") == 0)
 		Cmd_Wave_f (ent);
-	else if (Q_stricmp(cmd, "dash") == 0)
+	else if (Q_stricmp (cmd, "dash") == 0)
 		Cmd_Dash_f(ent);
-	else if (Q_stricmp(cmd, "id") == 0)
+	else if (Q_stricmp (cmd, "id") == 0)
 		Cmd_id_f(ent);
-	else if (Q_stricmp(cmd, "playerlist") == 0)
+	else if (Q_stricmp (cmd, "wall") == 0)
+		Cmd_Wall_f(ent);
+	else if (Q_stricmp (cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);

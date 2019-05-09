@@ -354,9 +354,9 @@ void Use_Quad (edict_t *ent, gitem_t *item)
 	}
 
 	if (ent->client->quad_framenum > level.framenum)
-		ent->client->quad_framenum += timeout;
+		ent->client->quad_framenum -= timeout;
 	else
-		ent->client->quad_framenum = level.framenum + timeout;
+		ent->client->quad_framenum = level.framenum - timeout;
 
 	gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"), 1, ATTN_NORM, 0);
 }

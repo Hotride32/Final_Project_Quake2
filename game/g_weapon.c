@@ -389,6 +389,53 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	}
 }	
 
+void fire_blaster_held(edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, int effect, qboolean hyper)
+{
+	edict_t	*bolt;
+	trace_t	tr;
+
+	VectorNormalize(dir);
+
+	bolt = G_Spawn();
+	bolt->svflags = SVF_DEADMONSTER;
+	// yes, I know it looks weird that projectiles are deadmonsters
+	// what this means is that when prediction is used against the object
+	// (blaster/hyperblaster shots), the player won't be solid clipped against
+	// the object.  Right now trying to run into a firing hyperblaster
+	// is very jerky since you are predicted 'against' the shots.
+	VectorCopy(start, bolt->s.origin);
+	VectorCopy(start, bolt->s.old_origin);
+	vectoangles(dir, bolt->s.angles);
+	VectorScale(dir, speed, bolt->velocity);
+	bolt->movetype = MOVETYPE_FLYMISSILE;
+	bolt->clipmask = MASK_SHOT;
+	bolt->solid = SOLID_BBOX;
+	bolt->s.effects |= effect;
+	VectorClear(bolt->mins);
+	VectorClear(bolt->maxs);
+	bolt->s.modelindex = gi.modelindex("sprites/s_bfg1.sp2");
+	bolt->s.sound = gi.soundindex("misc/lasfly.wav");
+	bolt->owner = self;
+	bolt->touch = blaster_touch;
+	bolt->nextthink = level.time + 2;
+	bolt->think = G_FreeEdict;
+	bolt->dmg = damage;
+	bolt->classname = "bolt";
+	if (hyper)
+		bolt->spawnflags = 1;
+	gi.linkentity(bolt);
+
+	if (self->client)
+		check_dodge(self, bolt->s.origin, dir, speed);
+
+	tr = gi.trace(self->s.origin, NULL, NULL, bolt->s.origin, bolt, MASK_SHOT);
+	if (tr.fraction < 1.0)
+	{
+		VectorMA(bolt->s.origin, -10, dir, bolt->s.origin);
+		bolt->touch(bolt, tr.ent, NULL, NULL);
+	}
+}
+
 
 /*
 =================
@@ -852,7 +899,7 @@ void bfg_think (edict_t *self)
 				T_Damage (tr.ent, self, self->owner, dir, tr.endpos, vec3_origin, dmg, 1, DAMAGE_ENERGY, MOD_BFG_LASER);
 
 			// if we hit something that's not a monster or player we're done
-			if (!(tr.ent->svflags & SVF_MONSTER) && (!tr.ent->client))
+			if ((tr.ent->svflags & SVF_MONSTER) && (!tr.ent->client))
 			{
 				gi.WriteByte (svc_temp_entity);
 				gi.WriteByte (TE_LASER_SPARKS);
@@ -888,7 +935,8 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 	VectorCopy (dir, bfg->movedir);
 	vectoangles (dir, bfg->s.angles);
 	VectorScale (dir, speed, bfg->velocity);
-	bfg->movetype = MOVETYPE_FLYMISSILE;
+	SV_AddGravity(bfg);
+	bfg->movetype = MOVETYPE_BOUNCE;
 	bfg->clipmask = MASK_SHOT;
 	bfg->solid = SOLID_BBOX;
 	bfg->s.effects |= EF_BFG | EF_ANIM_ALLFAST;
