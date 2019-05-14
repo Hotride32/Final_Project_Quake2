@@ -232,12 +232,12 @@ static void fire_lead(edict_t *self, vec3_t start, vec3_t aimdir, int damage, in
 			if (tr.ent->takedamage)
 			{
 				T_Damage (tr.ent, self, self, aimdir, tr.endpos, tr.plane.normal, damage, kick, DAMAGE_BULLET, mod);
-				if (shotgun == true){
+				if (shotgun == true && super == false){
 					tr.ent->nextthink += 1;
 				}
-				if (machine == true){
-					fire_lead(self, tr.endpos, first, damage, kick, TE_GUNSHOT, hspread, vspread, mod, false, false,false);
-					fire_lead(self, tr.endpos, second, damage, kick, TE_GUNSHOT, hspread, vspread, mod, false, false,false);
+				if (machine == true && !SVF_MONSTER){
+					fire_bullet(self, tr.endpos, first, damage, kick, TE_GUNSHOT, hspread, vspread, mod);
+					fire_bullet(self, tr.endpos, second, damage, kick, TE_GUNSHOT, hspread, vspread, mod);
 				}
 				if (super == true){
 					fire_grenade2(self, tr.endpos, first, damage, 5, 3, 5, false);
@@ -460,6 +460,95 @@ void fire_blaster_held(edict_t *self, vec3_t start, vec3_t dir, int damage, int 
 	}
 }
 
+void fire_flamethrower(edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, int effect, qboolean hyper)
+{
+	edict_t	*bolt;
+	trace_t	tr;
+
+	VectorNormalize(dir);
+
+	bolt = G_Spawn();
+	bolt->svflags = SVF_DEADMONSTER;
+	// yes, I know it looks weird that projectiles are deadmonsters
+	// what this means is that when prediction is used against the object
+	// (blaster/hyperblaster shots), the player won't be solid clipped against
+	// the object.  Right now trying to run into a firing hyperblaster
+	// is very jerky since you are predicted 'against' the shots.
+	VectorCopy(start, bolt->s.origin);
+	VectorCopy(start, bolt->s.old_origin);
+	vectoangles(dir, bolt->s.angles);
+	VectorScale(dir, speed, bolt->velocity);
+	bolt->movetype = MOVETYPE_FLYMISSILE;
+	bolt->clipmask = MASK_SHOT;
+	bolt->solid = SOLID_BBOX;
+	bolt->s.effects |= effect;
+	VectorClear(bolt->mins);
+	VectorClear(bolt->maxs);
+	bolt->s.modelindex = gi.modelindex("models/objects/laser/tris.md2");
+	bolt->s.sound = gi.soundindex("misc/lasfly.wav");
+	bolt->owner = self;
+	bolt->touch = blaster_touch;
+	bolt->nextthink = level.time + 2;
+	bolt->think = G_FreeEdict;
+	bolt->dmg = damage;
+	bolt->classname = "bolt";
+	if (hyper)
+		bolt->spawnflags = 1;
+	gi.linkentity(bolt);
+
+	if (self->client)
+		check_dodge(self, bolt->s.origin, dir, speed);
+
+	tr = gi.trace(self->s.origin, NULL, NULL, bolt->s.origin, bolt, MASK_SHOT);
+	if (tr.fraction < 1.0)
+	{
+		VectorMA(bolt->s.origin, -10, dir, bolt->s.origin);
+		bolt->touch(bolt, tr.ent, NULL, NULL);
+	}
+}
+
+void boomerang_think(edict_t *ent){
+	edict_t *target = NULL;
+	edict_t *blip = NULL;
+	vec3_t targetdir;
+	vec3_t blipdir;
+	vec_t speed;
+
+	while ((blip = findradius(blip, ent->s.origin, 1000)) != NULL){
+		if ((blip->svflags & SVF_MONSTER) && (!blip->client)){
+			continue;
+		}
+		if (!blip == ent->owner){
+			continue;
+		}
+		if (!blip->takedamage){
+			continue;
+		}
+		if (blip->health <= 0){
+			continue;
+		}
+		VectorSubtract(blip->s.origin, ent->s.origin, blipdir);
+		blipdir[2] += 16;
+		if ((target == NULL) || (VectorLength(blipdir) < VectorLength(targetdir))){
+			target = blip;
+			VectorCopy(blipdir, targetdir);
+		}
+	}
+
+	if (target != NULL){
+		VectorNormalize(targetdir);
+		VectorScale(targetdir, 0.2, targetdir);
+		VectorAdd(targetdir, ent->movedir, targetdir);
+		VectorNormalize(targetdir);
+		VectorCopy(targetdir, ent->movedir);
+		vectoangles(targetdir, ent->s.angles);
+		speed = VectorLength(ent->velocity);
+		VectorScale(targetdir, speed, ent->velocity);
+
+	}
+	ent->nextthink = level.time + .1;
+}
+
 
 /*
 =================
@@ -563,9 +652,9 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 
 	vectoangles (aimdir, dir);
 	AngleVectors (dir, forward, right, up);
-	for (i = 0; i < 3; i++){
-		aimdir[i] = aimdir[i] * (2 * 3.14159);
-	}
+	//for (i = 0; i < 3; i++){
+	//	aimdir[i] = aimdir[i] * (2 * 3.14159);
+	//}
 
 	grenade = G_Spawn();
 	VectorCopy (start, grenade->s.origin);
@@ -584,6 +673,14 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade->touch = Grenade_Touch;
 	grenade->nextthink = level.time + timer;
 	grenade->think = Grenade_Explode;
+	if (self->client && self->client->pers.homing){
+		grenade->nextthink = level.time + .5;
+		grenade->think = boomerang_think;
+	}
+	else{
+		grenade->nextthink = level.time + timer;
+		grenade->think = Grenade_Explode;
+	}
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
 	grenade->classname = "grenade";
@@ -635,6 +732,55 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	}
 }
 
+
+//Help from Qdevels
+void homing_think(edict_t *ent){
+	edict_t *target = NULL;
+	edict_t *blip = NULL;
+	vec3_t targetdir;
+	vec3_t blipdir;
+	vec_t speed;
+
+	while ((blip = findradius(blip, ent->s.origin, 1000)) != NULL){
+		if (!(blip->svflags & SVF_MONSTER) && (!blip->client)){
+			continue;
+		}
+		if (blip == ent->owner){
+			continue;
+		}
+		if (!blip->takedamage){
+			continue;
+		}
+		if (blip->health <= 0){
+			continue;
+		}
+		if (!visible(ent, blip)){
+			continue;
+		}
+		if (!infront(ent, blip)){
+			continue;
+		}
+		VectorSubtract(blip->s.origin, ent->s.origin, blipdir);
+		blipdir[2] += 16;
+		if ((target == NULL) || (VectorLength(blipdir) < VectorLength(targetdir))){
+			target = blip;
+			VectorCopy(blipdir, targetdir);
+		}
+	}
+
+	if (target != NULL){
+		VectorNormalize(targetdir);
+		VectorScale(targetdir, 0.2, targetdir);
+		VectorAdd(targetdir, ent->movedir, targetdir);
+		VectorNormalize(targetdir);
+		VectorCopy(targetdir, ent->movedir);
+		vectoangles(targetdir, ent->s.angles);
+		speed = VectorLength(ent->velocity);
+		VectorScale(targetdir, speed, ent->velocity);
+
+	}
+	ent->nextthink = level.time + .1;
+}
 
 /*
 =================
@@ -712,6 +858,14 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 	rocket->touch = rocket_touch;
 	rocket->nextthink = level.time + 8000/speed;
 	rocket->think = G_FreeEdict;
+	if (self->client && self->client->pers.homing){
+		rocket->nextthink = level.time + .1;
+		rocket->think = homing_think;
+	}
+	else{
+		rocket->nextthink = level.time + 8000 / speed;
+		rocket->think = G_FreeEdict;
+	}
 	rocket->dmg = damage;
 	rocket->radius_dmg = radius_damage;
 	rocket->dmg_radius = damage_radius;

@@ -862,6 +862,10 @@ typedef struct
 	int			helpchanged;
 
 	qboolean	spectator;			// client is a spectator
+	qboolean	homing;
+	qboolean	zBuster;
+	qboolean	torso;
+	qboolean	leg;
 } client_persistant_t;
 
 // client data that stays across deathmatch respawns
