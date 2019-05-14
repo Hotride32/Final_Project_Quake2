@@ -9,6 +9,7 @@ Play:
 Shift - Dash and Wall Jump.
 
 All weapons changed except Hyperblaster and throwable grenade.
+Be careful when using the BFG as too many enemies near the impact will cause the computer to freeze. 
 
 Only have to use once for these effects:
 Environment Suit - Half damage.
