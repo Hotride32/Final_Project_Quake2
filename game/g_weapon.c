@@ -131,7 +131,7 @@ fire_lead
 This is an internal support routine used for bullet/pellet based weapons.
 =================
 */
-static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int te_impact, int hspread, int vspread, int mod)
+static void fire_lead(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int te_impact, int hspread, int vspread, int mod, qboolean shotgun,qboolean machine,qboolean super)
 {
 	trace_t		tr;
 	vec3_t		dir;
@@ -142,6 +142,8 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 	vec3_t		water_start;
 	qboolean	water = false;
 	int			content_mask = MASK_SHOT | MASK_WATER;
+	vec3_t		first;
+	vec3_t      second;
 
 	tr = gi.trace (self->s.origin, NULL, NULL, start, self, MASK_SHOT);
 	if (!(tr.fraction < 1.0))
@@ -215,6 +217,13 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 		}
 	}
 
+	first[1] = aimdir[1] + 90;
+	first[2] = aimdir[2] + 90;
+	first[3] = aimdir[3] + 90;
+	second[1] = aimdir[1] - 90;
+	second[2] = aimdir[2] - 90;
+	second[3] = aimdir[3] - 90;
+
 	// send gun puff / flash
 	if (!((tr.surface) && (tr.surface->flags & SURF_SKY)))
 	{
@@ -223,6 +232,18 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 			if (tr.ent->takedamage)
 			{
 				T_Damage (tr.ent, self, self, aimdir, tr.endpos, tr.plane.normal, damage, kick, DAMAGE_BULLET, mod);
+				if (shotgun == true){
+					tr.ent->nextthink += 1;
+				}
+				if (machine == true){
+					fire_lead(self, tr.endpos, first, damage, kick, TE_GUNSHOT, hspread, vspread, mod, false, false,false);
+					fire_lead(self, tr.endpos, second, damage, kick, TE_GUNSHOT, hspread, vspread, mod, false, false,false);
+				}
+				if (super == true){
+					fire_grenade2(self, tr.endpos, first, damage, 5, 3, 5, false);
+					fire_grenade2(self, tr.endpos, second, damage, 5, 3, 5, false);
+					
+				}
 			}
 			else
 			{
@@ -276,7 +297,7 @@ pistols, rifles, etc....
 */
 void fire_bullet (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int mod)
 {
-	fire_lead (self, start, aimdir, damage, kick, TE_GUNSHOT, hspread, vspread, mod);
+	fire_lead(self, start, aimdir, damage, kick, TE_GUNSHOT, hspread, vspread, mod, false,true,false);
 }
 
 
@@ -287,12 +308,15 @@ fire_shotgun
 Shoots shotgun pellets.  Used by shotgun and super shotgun.
 =================
 */
-void fire_shotgun (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod)
+void fire_shotgun(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod,qboolean super)
 {
 	int		i;
 
-	for (i = 0; i < count; i++)
-		fire_lead (self, start, aimdir, damage, kick, TE_SHOTGUN, hspread, vspread, mod);
+	for (i = 0; i < count; i++){
+		fire_lead(self, start, aimdir, damage, kick, TE_SHOTGUN, hspread, vspread, mod, true,false,super);
+	}
+
+	
 }
 
 
@@ -535,9 +559,13 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	edict_t	*grenade;
 	vec3_t	dir;
 	vec3_t	forward, right, up;
+	int i;
 
 	vectoangles (aimdir, dir);
 	AngleVectors (dir, forward, right, up);
+	for (i = 0; i < 3; i++){
+		aimdir[i] = aimdir[i] * (2 * 3.14159);
+	}
 
 	grenade = G_Spawn();
 	VectorCopy (start, grenade->s.origin);
@@ -545,7 +573,7 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	VectorMA (grenade->velocity, 200 + crandom() * 10.0, up, grenade->velocity);
 	VectorMA (grenade->velocity, crandom() * 10.0, right, grenade->velocity);
 	VectorSet (grenade->avelocity, 300, 300, 300);
-	grenade->movetype = MOVETYPE_BOUNCE;
+	grenade->movetype = MOVETYPE_FLYMISSILE;
 	grenade->clipmask = MASK_SHOT;
 	grenade->solid = SOLID_BBOX;
 	grenade->s.effects |= EF_GRENADE;
