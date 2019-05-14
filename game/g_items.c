@@ -343,6 +343,8 @@ void Use_Quad (edict_t *ent, gitem_t *item)
 	ent->client->pers.inventory[ITEM_INDEX(item)]--;
 	ValidateSelectedItem (ent);
 
+	ent->client->pers.zBuster = 1;
+
 	if (quad_drop_timeout_hack)
 	{
 		timeout = quad_drop_timeout_hack;
@@ -367,7 +369,7 @@ void Use_Breather (edict_t *ent, gitem_t *item)
 {
 	ent->client->pers.inventory[ITEM_INDEX(item)]--;
 	ValidateSelectedItem (ent);
-
+	ent->client->pers.leg = 1;
 	if (ent->client->breather_framenum > level.framenum)
 		ent->client->breather_framenum += 300;
 	else
@@ -382,7 +384,7 @@ void Use_Envirosuit (edict_t *ent, gitem_t *item)
 {
 	ent->client->pers.inventory[ITEM_INDEX(item)]--;
 	ValidateSelectedItem (ent);
-	ent->client->pers.torso == 1;
+	ent->client->pers.torso = 1;
 	if (ent->client->enviro_framenum > level.framenum)
 		ent->client->enviro_framenum += 300;
 	else

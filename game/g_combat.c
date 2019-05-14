@@ -484,25 +484,28 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		return;
 
 // do the damage
-	if (take)
-	{
-		if ((targ->svflags & SVF_MONSTER) || (client))
-			SpawnDamage (TE_BLOOD, point, normal, take);
-		else
-			SpawnDamage (te_sparks, point, normal, take);
-
-
-		targ->health = targ->health - take;
-			
-		if (targ->health <= 0)
-		{
-			if ((targ->svflags & SVF_MONSTER) || (client))
-				targ->flags |= FL_NO_KNOCKBACK;
-			Killed (targ, inflictor, attacker, take, point);
-			return;
-		}
+	if (client && client->pers.torso ){
+		take *= 0.5;
 	}
 
+	if (take)
+	{
+			if ((targ->svflags & SVF_MONSTER) || (client))
+				SpawnDamage(TE_BLOOD, point, normal, take);
+			else
+				SpawnDamage(te_sparks, point, normal, take);
+
+
+			targ->health = targ->health - take;
+
+			if (targ->health <= 0)
+			{
+				if ((targ->svflags & SVF_MONSTER) || (client))
+					targ->flags |= FL_NO_KNOCKBACK;
+				Killed(targ, inflictor, attacker, take, point);
+				return;
+			}
+	}
 	if (targ->svflags & SVF_MONSTER)
 	{
 		M_ReactToDamage (targ, attacker);

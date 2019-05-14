@@ -937,7 +937,9 @@ void Cmd_Dash_f(edict_t *ent){
 
 	for (i = 0; i < 3; i++)
 	{
-		client->ps.pmove.velocity[i] = (ent->velocity[i] *= 5);
+		if (client && client->pers.leg){
+			client->ps.pmove.velocity[i] = (ent->velocity[i] *= 5);
+		}
 	}
 
 	//pm.pointcontents = gi.pointcontents;
@@ -1177,7 +1179,7 @@ void ClientCommand (edict_t *ent)
 		Cmd_PutAway_f (ent);
 	else if (Q_stricmp (cmd, "wave") == 0)
 		Cmd_Wave_f (ent);
-	else if (Q_stricmp (cmd, "dash") == 0)
+	else if (Q_stricmp(cmd, "dash") == 0)
 		Cmd_Dash_f(ent);
 	else if (Q_stricmp (cmd, "id") == 0)
 		Cmd_id_f(ent);

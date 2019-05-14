@@ -554,7 +554,7 @@ void weapon_grenade_fire (edict_t *ent, qboolean held)
 	float	radius;
 
 	radius = damage+40;
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 		damage *= 4;
 
 	VectorSet(offset, 8, 8, ent->viewheight-8);
@@ -715,7 +715,7 @@ void weapon_grenadelauncher_fire (edict_t *ent)
 	float	radius;
 
 	radius = damage+40;
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 		damage *= 4;
 
 	VectorSet(offset, 8, 8, ent->viewheight-8);
@@ -767,7 +767,7 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 	damage = 100 + (int)(random() * 20.0);
 	radius_damage = 120;
 	damage_radius = 120;
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 	{
 		damage *= 4;
 		radius_damage *= 4;
@@ -819,7 +819,7 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 	vec3_t	start;
 	vec3_t	offset;
 
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 		damage *= 4;
 	AngleVectors (ent->client->v_angle, forward, right, NULL);
 	VectorSet(offset, 24, 8, ent->viewheight-8);
@@ -990,7 +990,7 @@ void Machinegun_Fire (edict_t *ent)
 		return;
 	}
 
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 	{
 		damage *= 4;
 		kick *= 4;
@@ -1133,7 +1133,7 @@ void Chaingun_Fire (edict_t *ent)
 		return;
 	}
 
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 	{
 		damage *= 4;
 		kick *= 4;
@@ -1209,7 +1209,7 @@ void weapon_shotgun_fire (edict_t *ent)
 	VectorSet(offset, 0, 8,  ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
 
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 	{
 		damage *= 4;
 		kick *= 4;
@@ -1259,7 +1259,7 @@ void weapon_supershotgun_fire (edict_t *ent)
 	VectorSet(offset, 0, 8,  ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
 
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 	{
 		damage *= 4;
 		kick *= 4;
@@ -1324,7 +1324,7 @@ void weapon_railgun_fire (edict_t *ent)
 		kick = 250;
 	}
 
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 	{
 		damage *= 4;
 		kick *= 4;
@@ -1404,7 +1404,7 @@ void weapon_bfg_fire (edict_t *ent)
 		return;
 	}
 
-	if (is_quad)
+	if (ent->client->pers.zBuster == 1)
 		damage *= 4;
 
 	AngleVectors (ent->client->v_angle, forward, right, NULL);

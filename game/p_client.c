@@ -1581,7 +1581,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 
 	level.current_entity = ent;
 	client = ent->client;
-
+	
 	client->chargetime += 1;
 
 	if (level.intermissiontime)
@@ -1749,6 +1749,9 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		if (other->inuse && other->client->chase_target == ent)
 			UpdateChaseCam(other);
 	}
+
+
+
 }
 
 
