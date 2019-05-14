@@ -1375,7 +1375,7 @@ void weapon_bfg_fire (edict_t *ent)
 	vec3_t	offset, start;
 	vec3_t	forward, right;
 	int		damage;
-	float	damage_radius = 1000;
+	float	damage_radius = 100;
 
 	if (deathmatch->value)
 		damage = 200;
